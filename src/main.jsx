@@ -249,8 +249,9 @@ function App() {
   }, [history, period, exchange]);
   const stocks = useMemo(() => {
     const s = data?.snapshot?.stocks || data?.snapshot?.top_funded_stocks || [];
-    const arr = s.length
-      ? s.map((x) => [
+    const stockRows = Array.isArray(s) ? s : Object.values(s);
+    const arr = stockRows.length
+      ? stockRows.map((x) => [
           x.symbol || x.ticker || x.name,
           x.company || x.company_name || x.symbol,
           "NSE",
@@ -303,6 +304,13 @@ function App() {
     link.click();
     URL.revokeObjectURL(url);
   };
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    document.getElementById("stock-results")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
   return (
     <div className="app">
       <header className="topbar">
@@ -325,9 +333,11 @@ function App() {
           <span>MARKET DATA LIVE</span>
           <small>As of {fmtDate(displayDate)}</small>
         </div>
-        <div className="globalSearch">
+        <form className="globalSearch" onSubmit={handleSearchSubmit}>
           <Search size={17} />
           <input
+            type="search"
+            aria-label="Search stocks, symbols or companies"
             placeholder="Search stocks, symbols or companies..."
             value={query}
             onChange={(e) => {
@@ -338,7 +348,7 @@ function App() {
           <kbd>
             <Command size={12} /> K
           </kbd>
-        </div>
+        </form>
         <button
           className="iconBtn"
           onClick={() => setDark(!dark)}
@@ -641,7 +651,7 @@ function App() {
               icon={<PieIcon />}
             />
           </div>
-          <section className="card tableCard">
+          <section className="card tableCard" id="stock-results">
             <div className="tableHead">
               <div>
                 <h2>TOP MTF STOCKS</h2>
@@ -688,7 +698,7 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pageRows.map((r, i) => (
+                  {pageRows.length ? pageRows.map((r, i) => (
                     <tr key={r[0]}>
                       <td>{(page - 1) * rowsPer + i + 1}</td>
                       <td className="symbol">{r[0]}</td>
@@ -713,7 +723,13 @@ function App() {
                         <Spark positive={r[5] >= 0} />
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan="9" className="emptyState">
+                        No stocks match “{query}”.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
