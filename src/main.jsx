@@ -158,6 +158,16 @@ function fmtDate(d) {
     year: "numeric",
   });
 }
+function normalizeStocks(snapshot) {
+  const direct = snapshot?.stocks || snapshot?.top_funded_stocks;
+  if (Array.isArray(direct)) return direct;
+  return ["NSE", "BSE"].flatMap((exchange) =>
+    (snapshot?.exchanges?.[exchange]?.top_funded || []).map((stock) => ({
+      ...stock,
+      exchange,
+    })),
+  );
+}
 
 function App() {
   const [dark, setDark] = useState(true),
@@ -248,14 +258,14 @@ function App() {
     return rows;
   }, [history, period, exchange]);
   const stocks = useMemo(() => {
-    const s = data?.snapshot?.stocks || data?.snapshot?.top_funded_stocks || [];
+    const s = normalizeStocks(data?.snapshot);
     const stockRows = Array.isArray(s) ? s : Object.values(s);
     const arr = stockRows.length
       ? stockRows.map((x) => [
           x.symbol || x.ticker || x.name,
           x.company || x.company_name || x.symbol,
-          "NSE",
-          num(x.book ?? x.mtf_book),
+          x.exchange || "NSE",
+          num(x.book ?? x.mtf_book ?? x.amt),
           num(x.change ?? x.change_lakh),
           num(x.change_pct ?? x.change_percent),
           num(x.leverage_pct ?? x.leverage),
