@@ -482,7 +482,13 @@ function App() {
                     <CartesianGrid stroke="#1c2940" strokeDasharray="2 3" />
                     <XAxis
                       dataKey="date"
-                      tickFormatter={(x) => x.slice(0, 4)}
+                      tickFormatter={(x) => {
+                        if (period === "1M") return x.slice(5).replace("-", "/");
+                        if (period === "3M" || period === "6M") {
+                          return x.slice(5, 7) + "/" + x.slice(8, 10);
+                        }
+                        return x.slice(0, 4);
+                      }}
                       tick={{ fill: "#7f8da5", fontSize: 11 }}
                       axisLine={false}
                     />
